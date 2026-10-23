@@ -40,48 +40,55 @@ try:
     send_telegram_message("✅ ربات وارد سایت شد و در حال بررسی ناهار هفته آینده است...")
     time.sleep(4)
 
-    # انتقال به تب رزرو
-    driver.get("https://self.pgu.ac.ir/#!/Reservation")
-    time.sleep(3)
-
-    # ۱. کلیک دقیق روی دکمه "هفته بعد"
-    try:
-        hafte_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'هفته بعد') or contains(@ng-click, '7')]")))
-        hafte_btn.click()
+    # حلقه تکرار تا زمان باز شدن ظرفیت
+    while True:
+        # انتقال به تب رزرو (یا رفرش در دفعات بعدی)
+        driver.get("https://self.pgu.ac.ir/#!/Reservation")
+        driver.refresh()
         time.sleep(3)
-    except:
-        pass
 
-    # ۲. کلیک روی تب شنبه
-    try:
-        shanbe_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//label[contains(@href, 'tab_day0') or contains(text(), 'شنبه')]")))
-        shanbe_btn.click()
-        time.sleep(3)
-    except:
-        send_telegram_message("⚠️ خطا: دکمه شنبه پیدا نشد.")
+        # ۱. کلیک دقیق روی دکمه "هفته بعد"
+        try:
+            hafte_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'هفته بعد') or contains(@ng-click, '7')]")))
+            hafte_btn.click()
+            time.sleep(3)
+        except:
+            pass
 
-    # ۳. استخراج متن صفحه و دور ریختن صبحانه و شام
-    visible_text = driver.find_element(By.TAG_NAME, "body").text
-    target_phrase = "برنامه رزرو تعریف نشده است"
+        # ۲. کلیک روی تب شنبه
+        try:
+            shanbe_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//label[contains(@href, 'tab_day0') or contains(text(), 'شنبه')]")))
+            shanbe_btn.click()
+            time.sleep(3)
+        except:
+            send_telegram_message("⚠️ خطا: دکمه شنبه پیدا نشد.")
 
-    # بررسی وضعیت ناهار به تنهایی
-    if "ناهار" in visible_text:
-        # تمام متن‌های قبل از ناهار (شامل صبحانه) دور ریخته می‌شود
-        text_after_nahar = visible_text.split("ناهار")[1]
-        
-        # تمام متن‌های بعد از شام دور ریخته می‌شود
-        if "شام" in text_after_nahar:
-            nahar_only_text = text_after_nahar.split("شام")[0]
+        # ۳. استخراج متن صفحه و دور ریختن صبحانه و شام
+        visible_text = driver.find_element(By.TAG_NAME, "body").text
+        target_phrase = "برنامه رزرو تعریف نشده است"
+
+        # بررسی وضعیت ناهار به تنهایی
+        if "ناهار" in visible_text:
+            # تمام متن‌های قبل از ناهار (شامل صبحانه) دور ریخته می‌شود
+            text_after_nahar = visible_text.split("ناهار")[1]
+            
+            # تمام متن‌های بعد از شام دور ریخته می‌شود
+            if "شام" in text_after_nahar:
+                nahar_only_text = text_after_nahar.split("شام")[0]
+            else:
+                nahar_only_text = text_after_nahar
+
+            # حالا فقط محدوده متنی خالص ناهار بررسی می‌شود
+            if target_phrase not in nahar_only_text:
+                send_telegram_message(">>> 🍛 خبر خوب! ظرفیت **ناهار** شنبه باز شد! سریع رزرو کن! <<<")
+                break  # خروج از حلقه و پایان کار اکشن پس از ارسال خبر
+            else:
+                print("ظرفیت ناهار هنوز بسته است. انتظار به مدت ۵ دقیقه برای بررسی مجدد...")
         else:
-            nahar_only_text = text_after_nahar
+            print("بخش ناهار در صفحه لود نشد. انتظار به مدت ۵ دقیقه برای بررسی مجدد...")
 
-        # حالا فقط محدوده متنی خالص ناهار بررسی می‌شود
-        if target_phrase not in nahar_only_text:
-            send_telegram_message(">>> 🍛 خبر خوب! ظرفیت **ناهار** شنبه باز شد! سریع رزرو کن! <<<")
-        else:
-            print("ظرفیت ناهار هنوز بسته است.")
-    else:
-        print("بخش ناهار در صفحه لود نشد.")
+        # توقف به مدت ۵ دقیقه (۳۰۰ ثانیه) قبل از تکرار مجدد حلقه
+        time.sleep(300)
 
 except Exception as e:
     print("خطای سیستمی:", e)
