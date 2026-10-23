@@ -1,20 +1,27 @@
 name: Self Reservation Monitor
 
 on:
+  workflow_dispatch: # دکمه اجرای دستی برای هر زمان که خودتان بخواهید استارت بزنید
   schedule:
-    # اجرای خودکار هر 10 دقیقه یک‌بار
-    - cron: '*/10 * * * *'
-  workflow_dispatch: # اضافه کردن دکمه برای اجرای دستی
+    # اجرای خودکار هر ۶ ساعت یک‌بار (برای تمدید خودکار بعد از اتمام محدودیت ۶ ساعته گیت‌هاب)
+    - cron: '0 */6 * * *'
+
+# جلوگیری از اجرای همزمان دو ربات (اگر ربات جدید شروع شود، قبلی را متوقف می‌کند)
+concurrency:
+  group: self-bot-group
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 360 # تنظیم سقف ۶ ساعت (۳۶۰ دقیقه) برای هر بار اجرا
+    
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -23,9 +30,4 @@ jobs:
           pip install selenium requests
 
       - name: Run Bot
-        env:
-          STUDENT_ID: ${{ secrets.STUDENT_ID }}
-          PASSWORD: ${{ secrets.PASSWORD }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
         run: python bot.py
