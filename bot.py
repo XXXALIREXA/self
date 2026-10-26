@@ -6,10 +6,10 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-STUDENT_ID = "شماره_دانشجویی_اینجا"
-PASSWORD = "رمز_عبور_اینجا"
-BOT_TOKEN = "توکن_ربات_تلگرام_اینجا"
-CHAT_ID = "آیدی_عددی_تلگرام_اینجا"
+STUDENT_ID = "4030111152"
+PASSWORD = "123456sS@"
+BOT_TOKEN = "8726546315:AAFgXTiz-XigEbYoD72ujnC7ubEylx97q2Y"
+CHAT_ID = "5120559674"
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
